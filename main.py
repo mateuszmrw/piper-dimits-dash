@@ -1,4 +1,6 @@
 from dimits import Dimits
+from dimits.ttsmodel import TextToSpeechModel as ttsm
+
 from bottle import route, request, static_file, run, HTTPResponse
 import hashlib
 from ffmpeg import FFmpeg
@@ -15,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 audio_dir = "/wav"
 models_dir = "/models"
+audio_format = "wav"
 
 def load_model_options() -> dict[str, str]:
     model_file_exists = os.path.isfile("config.json")
@@ -38,7 +41,7 @@ def get_hash_name(text: str) -> str:
 
 def synthesise_audio_to_file(text: str, model: str) -> str:
        file_name = get_hash_name(text)
-       wav_exists = os.path.isfile(audio_dir + "/" + file_name + ".wav")
+       wav_exists = os.path.isfile(f'{audio_dir}/${file_name}.{audio_format}')
 
        if wav_exists == False:
         dt = Dimits(model)
@@ -75,23 +78,22 @@ def stream_dash() -> HTTPResponse:
         if model is None:
             return handle_error(404, "No model available for the specified language")
 
-        manifest_name = get_hash_name(data["text"]) + ".mpd"
-        manifest_exist = os.path.isfile(audio_dir + "/" + manifest_name)
+        manifest_name = f'{get_hash_name(data["text"])}.mpd'
+        manifest_exist = os.path.isfile(f'{audio_dir}/{manifest_name}')
         if manifest_exist:
             return json.dumps({'status': "ok", 'manifestName': manifest_name })
 
         file_name = synthesise_audio_to_file(data["text"], model)
-        wav_file_name = file_name + ".wav"
 
         ffmpeg = (
             FFmpeg()
             .option("y")
-            .input(audio_dir + "/" + wav_file_name)
-            .output(audio_dir + "/" + manifest_name, f="dash")
+            .input(f'{audio_dir}/{file_name}.{audio_format}')
+            .output(f'{audio_dir}/{manifest_name}', f="dash")
         )
 
         ffmpeg.execute()
-        os.remove(audio_dir + "/" + wav_file_name)
+        os.remove(f'{audio_dir}/{file_name}.{audio_format}')
         return json.dumps({'status': "ok", 'manifestName': manifest_name })
     
     except Exception as e:
