@@ -1,7 +1,7 @@
 
 # piper-dimits-dash
 
-piper-dimits-dash is a web service for synthesizing audio from text using the Dimits text-to-speech library and streaming it using the DASH protocol. This service supports multiple languages and can dynamically generate audio files and DASH manifests.
+piper-dimits-dash is a web service for synthesizing audio from text using the Piper text-to-speech and Dimits library and streaming it using the DASH protocol. This service supports multiple languages and can dynamically generate audio files and DASH manifests.
 
 ## Features
 
