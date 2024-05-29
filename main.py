@@ -73,7 +73,7 @@ def stream_dash():
                 FFmpeg()
                 .option("y")
                 .input(audio_dir + "/" + wav_file_name)
-                .output(audio_dir + "/" + manifest_name, {"single_file":1}, f="dash")
+                .output(audio_dir + "/" + manifest_name, f="dash")
         )
 
         ffmpeg.execute()
