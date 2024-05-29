@@ -44,7 +44,7 @@ def synthesise_audio_to_file(text: str, model: str) -> str:
        wav_exists = os.path.isfile(f'{audio_dir}/${file_name}.{audio_format}')
 
        if wav_exists == False:
-        dt = Dimits(model)
+        dt = Dimits(model, True, models_dir)
         dt.text_2_audio_file(text, file_name, audio_dir, format="wav")
 
        return file_name
