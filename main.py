@@ -8,19 +8,13 @@ import os
 
 import logging
 
+from util.http import get_request_data, handle_error
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 audio_dir = "/wav"
 models_dir = "/models"
-
-def handle_error(status, message):
-    response = {
-        'status': 'error',
-        'message': message
-    }
-    logger.error(message)
-    return HTTPResponse(status=status, body=json.dumps(response))
 
 def load_model_options() -> dict[str, str]:
     model_file_exists = os.path.isfile("config.json")
@@ -53,40 +47,40 @@ def synthesise_audio_to_file(text: str, model: str) -> str:
        return file_name
 
 @route('/synthesise', method='POST')
-def synthesis():
+def synthesis() -> HTTPResponse:
     try:
-        language = request.json.get('language')
-        text = request.json.get("text")
-        if not language or not text:
-            return handle_error(400, "Missing 'language' or 'text' in the request body")
-        
-        model = model_options.get(language)
+        required_fields = ["language", "text"]
+        data = get_request_data(request, required_fields)
+        if isinstance(data, HTTPResponse):
+            return data
+        model = model_options.get(data["language"])
         if model is None:
             return handle_error(404, "No model available for the specified language")
 
-        fileName = synthesise_audio_to_file(text, model)
+        fileName = synthesise_audio_to_file(data["text"], model)
         return json.dumps({'status': "ok", 'fileName': fileName })
     
     except Exception as e:
         return handle_error(500, f"Internal server error: {str(e)}")
+
 @route('/stream/dash', method='POST')
-def stream_dash():
+def stream_dash() -> HTTPResponse:
     try:
-        language = request.json.get('language')
-        text = request.json.get("text")
-        if not language or not text:
-            return handle_error(400, "Missing 'language' or 'text' in the request body")
-        
-        model = model_options.get(language)
+        required_fields = ["language", "text"]
+        data = get_request_data(request, required_fields)
+        if isinstance(data, HTTPResponse):
+            return data
+
+        model = model_options.get(data["language"])
         if model is None:
             return handle_error(404, "No model available for the specified language")
 
-        manifest_name = get_hash_name(text) + ".mpd"
+        manifest_name = get_hash_name(data["text"]) + ".mpd"
         manifest_exist = os.path.isfile(audio_dir + "/" + manifest_name)
         if manifest_exist:
             return json.dumps({'status': "ok", 'manifestName': manifest_name })
 
-        file_name = synthesise_audio_to_file(text, model)
+        file_name = synthesise_audio_to_file(data["text"], model)
         wav_file_name = file_name + ".wav"
 
         ffmpeg = (
