@@ -1,7 +1,6 @@
 services:
       piper-dimits-dash:
         container_name: piper-dimits-dash
-        image: ghcr.io/mateuszmrw/piper-dimits-dash:latest
         restart: unless-stopped
         tty: true
         volumes:
@@ -10,3 +9,5 @@ services:
         # - ./config:json:/app/config.json # optional
         ports:
             - "8888:8888"
+        build:
+          dockerfile: ./.Dockerfile
