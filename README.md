@@ -111,9 +111,7 @@ Model options are defined in `config.json`. If this file does not exist, default
 
 ```json
 {
-    "ru_RU": "ru_RU-denis-medium",
     "en_GB": "en_GB-alan-medium",
-    "pl_PL": "pl_PL-darkman-medium"
 }
 ```
 

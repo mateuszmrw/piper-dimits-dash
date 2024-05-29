@@ -6,6 +6,7 @@ services:
         volumes:
           - ./wav:/wav
           - ./models:/models
+        # - ./config:json:/app/config.json # optional
         ports:
             - "8888:8888"
         build:
