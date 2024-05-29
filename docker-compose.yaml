@@ -1,0 +1,12 @@
+services:
+      piper-dimits-dash:
+        container_name: piper-dimits-dash
+        restart: unless-stopped
+        tty: true
+        volumes:
+          - ./wav:/wav
+          - ./models:/models
+        ports:
+            - "8888:8888"
+        build:
+            dockerfile: ./.Dockerfile
