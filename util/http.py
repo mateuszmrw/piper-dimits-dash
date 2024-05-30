@@ -1,22 +1,26 @@
-from typing import Dict, List, Union, Any
+from typing import Union 
 from bottle import HTTPResponse, Request
 import json
 import logging
 
+from util.request_data import RequestData
+
 logger = logging.getLogger(__name__)
 
-
-def get_request_data(request: Request, required_fields: List[str]) -> Union[Dict[str, Any], HTTPResponse]:
-    data: dict[str, any] = {}
+def get_request_data(request: Request) -> Union[RequestData, HTTPResponse]:
     try:
-        for field in required_fields:
-            value = request.json.get(field)
-            if not value:
-                raise ValueError(f"Missing '{field}' in the request body")
-            data[field] = value
+        language = request.json.get('language')
+        text = request.json.get('text')
+        if not language or not text:
+            raise ValueError("Missing 'language' or 'text' in the request body")
+        length_scale = request.json.get('lengthScale', 1.0)
+        noise_scale = request.json.get('noiseScale', 0.3)
+        noise_w = request.json.get('noiseW', 1.0)
+
+        return RequestData(language, text, length_scale, noise_scale, noise_w)
+
     except Exception as e:
         return handle_error(400, str(e))
-    return data
 
 def handle_error(status: int, message: str) -> HTTPResponse:
     response = {

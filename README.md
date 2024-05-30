@@ -15,6 +15,7 @@ piper-dimits-dash is a web service for synthesizing audio from text using the Pi
 - Docker
 - Python 3.x
 - ffmpeg
+- espeak-ng
 
 ## Installation
 
@@ -49,6 +50,12 @@ docker build -t piper-dimits-dash .
 docker run -p 8888:8888 -v $(pwd)/wav:/wav -v $(pwd)/models:/models piper-dimits-dash
 ```
 
+Alternatively, you can use `docker-compose`:
+
+```sh
+docker-compose up
+```
+
 ## Usage
 
 ### Endpoints
@@ -62,7 +69,10 @@ docker run -p 8888:8888 -v $(pwd)/wav:/wav -v $(pwd)/models:/models piper-dimits
   ```json
   {
       "language": "en_GB",
-      "text": "Hello, world!"
+      "text": "Hello, world!",
+      "lengthScale": 1.0,    // Optional
+      "noiseScale": 0.3,     // Optional
+      "noiseW": 1.0          // Optional
   }
   ```
 
@@ -84,7 +94,10 @@ docker run -p 8888:8888 -v $(pwd)/wav:/wav -v $(pwd)/models:/models piper-dimits
   ```json
   {
       "language": "en_GB",
-      "text": "Hello, world!"
+      "text": "Hello, world!",
+      "lengthScale": 1.0,    // Optional
+      "noiseScale": 0.3,     // Optional
+      "noiseW": 1.0          // Optional
   }
   ```
 
