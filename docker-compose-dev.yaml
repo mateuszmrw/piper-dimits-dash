@@ -7,6 +7,8 @@ services:
           - ./wav:/wav
           - ./models:/models
         # - ./config:json:/app/config.json # optional
+        environment:
+        - TEXT_MAX_LENGTH=255 # Default value, can be overridden
         ports:
             - "8888:8888"
         build:

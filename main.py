@@ -3,15 +3,16 @@ from dimits.ttsmodel import TextToSpeechModel as ttsm
 
 from bottle import route, request, static_file, run, HTTPResponse
 import hashlib
-from ffmpeg import FFmpeg
+from ffmpeg import FFmpeg 
 
 import json
 import os
 
 import logging
+import re
 
-from util.http import get_request_data, handle_error
-from util.request_data import RequestData
+from util.http import handle_error
+from util.request_data import RequestData, get_request_data
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ def synthesise_audio_to_file(request_data: RequestData, model: str) -> str:
        file_name = get_hash_name(request_data.text)
        wav_exists = os.path.isfile(f'{audio_dir}/${file_name}.{audio_format}')
 
-       if wav_exists == False:
+       if not wav_exists:
         dt = Dimits(model, True, models_dir)
         tts = ttsm(dt.voice_onnx)
         if not os.path.exists(audio_dir):
@@ -83,9 +84,13 @@ def stream_dash() -> HTTPResponse:
         model = model_options.get(data.language)
         if model is None:
             return handle_error(404, "No model available for the specified language")
-
-        manifest_name = f'{get_hash_name(data.text)}.mpd'
-        manifest_exist = os.path.isfile(f'{audio_dir}/{manifest_name}')
+        hash_name = get_hash_name(data.text)
+        manifest_dir = os.path.join(audio_dir, hash_name)
+        if not os.path.exists(manifest_dir):
+            os.mkdir(manifest_dir)
+        manifest_name = f'{hash_name}.mpd'
+        manifest_path = os.path.join(audio_dir, manifest_name)
+        manifest_exist = os.path.isfile(manifest_path)
         if manifest_exist:
             return HTTPResponse(status=200, body=json.dumps({'status': "ok", 'manifestName': manifest_name }))
 
@@ -95,7 +100,7 @@ def stream_dash() -> HTTPResponse:
             FFmpeg()
             .option("y")
             .input(f'{audio_dir}/{file_name}.{audio_format}')
-            .output(f'{audio_dir}/{manifest_name}', f="dash")
+            .output(manifest_path, init_seg_name=f'{hash_name}/init-stream$RepresentationID$.$ext$', media_seg_name=f'{hash_name}/chunk-stream$RepresentationID$-$Number%05d$.$ext$', f="dash")
         )
 
         ffmpeg.execute()
@@ -105,9 +110,19 @@ def stream_dash() -> HTTPResponse:
     except Exception as e:
         return handle_error(500, f"Internal server error: {str(e)}")
 
-@route('/get_stream/<file_name>', method='GET')
-def get_stream(file_name):
-       return static_file(file_name, root=audio_dir)
+VALID_DASH_FILE_REGEX = re.compile(r'^([a-zA-Z0-9]+\.mpd|[a-zA-Z0-9]+\/(init-stream[0-9]+\.m4s|chunk-stream[0-9]+-\d{5}\.m4s))$')
+
+@route('/get_stream/<file_path:path>', method='GET')
+def get_stream(file_path):
+    if not VALID_DASH_FILE_REGEX.match(file_path):
+        return handle_error(400, "Invalid file name format")
+
+    stream_file_path = os.path.join(audio_dir, file_path)
+
+    if not os.path.isfile(stream_file_path):
+        return handle_error(404, "File not found")
+
+    return static_file(file_path, root=audio_dir)
 
 run(host='0.0.0.0', port=8888, reloader=True, debug=True)
 

@@ -50,6 +50,12 @@ docker build -t piper-dimits-dash .
 docker run -p 8888:8888 -v $(pwd)/wav:/wav -v $(pwd)/models:/models piper-dimits-dash
 ```
 
+To override the TEXT_MAX_LENGTH value:
+
+```sh
+docker-compose up -d --build --scale piper-dimits-dash=1 -e TEXT_MAX_LENGTH=500
+```
+
 Alternatively, you can use `docker-compose`:
 
 ```sh
@@ -117,6 +123,22 @@ docker-compose up
   **Response:**
 
   Returns the requested file.
+
+## Request Validation
+
+The POST /synthesise and POST /stream/dash endpoints require a request body with specific fields. These fields are validated for type and value ranges using Pydantic models.
+
+Request Body Fields:
+
+- language: A string representing the language code (e.g., “en_GB”). Maximum length is 20 characters.
+
+- text: The text to be synthesized. Maximum length is defined by the TEXT_MAX_LENGTH environment variable (default is 255 characters).
+
+- lengthScale: An optional float value representing the length scale. Default is 1.0, with a valid range between 0.1 and 5.0.
+
+- noiseScale: An optional float value representing the noise scale. Default is 0.3, with a valid range between 0.0 and 1.0.
+
+-noiseW: An optional float value representing the noise weight. Default is 1.0, with a valid range between 0.0 and 1.0.
 
 ## Configuration
 
