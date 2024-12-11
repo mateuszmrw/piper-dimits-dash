@@ -22,7 +22,7 @@ piper-dimits-dash is a web service for synthesizing audio from text using the Pi
 1. **Clone the repository:**
 
 ```sh
-git clone https://github.com/yourusername/piper-dimits-dash.git
+git clone https://github.com/mateuszmrw/piper-dimits-dash.git
 cd piper-dimits-dash
 ```
 
